@@ -17,11 +17,11 @@ Developed and maintained by **[Levisteria GbR](https://levisteria.com)** (Eddy L
 - **Full API Coverage:** Automatically generates tools for Time Tracking, Projects, Invoices, Contacts, and all other MOCO endpoints.
 - **Safety Mode:** Can be restricted to `READ_ONLY` via environment variables to prevent accidental data modifications by the LLM.
 - **Always Up-to-Date:** Fetches the latest API specification from MOCO on every server start.
-- **Multiple Execution Methods:** Run via `npx`, Docker, or Docker Compose.
+- **Easy Execution:** Run directly via `npx`.
 
 ## Prerequisites
 
-- Node.js (v18 or higher) or Docker
+- Node.js (v18 or higher)
 - A MOCO Account (`<your-account>.mocoapp.com`)
 - A MOCO API Key (found in MOCO under Profile > Integrations)
 
@@ -57,25 +57,7 @@ Add the server to your MCP configuration (e.g., in Claude Desktop or Cursor).
 }
 ```
 
-### Using Docker
 
-```json
-{
-  "mcpServers": {
-    "moco": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-e", "MOCO_DOMAIN=your-account-name",
-        "-e", "MOCO_API_KEY=your-api-key",
-        "-e", "MOCO_READ_ONLY=false",
-        "ghcr.io/levisteria/moco-mcp-server:latest"
-      ]
-    }
-  }
-}
 ```
 
 ## Environment Variables
@@ -109,21 +91,7 @@ npm run build
 npm start
 ```
 
-### Testing with Docker Compose
 
-You can test the server locally using Docker Compose:
-
-1. Create a `.env` file in the root directory:
-```env
-MOCO_DOMAIN=your-account-name
-MOCO_API_KEY=your-api-key
-MOCO_READ_ONLY=true
-```
-
-2. Build and run:
-```bash
-docker-compose up --build
-```
 
 ## How it works
 
