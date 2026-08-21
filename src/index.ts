@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -7,9 +10,6 @@ import {
   type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import axios from "axios";
-import * as fs from "fs";
-import * as path from "path";
-import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,15 +17,19 @@ const __dirname = path.dirname(__filename);
 // MOCO API configuration
 const MOCO_DOMAIN = process.env.MOCO_DOMAIN;
 const MOCO_API_KEY = process.env.MOCO_API_KEY;
-const MOCO_READ_ONLY = process.env.MOCO_READ_ONLY === 'true'; // Optional: Restrict to GET requests
+const MOCO_READ_ONLY = process.env.MOCO_READ_ONLY === "true"; // Optional: Restrict to GET requests
 
 if (!MOCO_DOMAIN || !MOCO_API_KEY) {
-  console.error("Error: MOCO_DOMAIN and MOCO_API_KEY environment variables are required.");
+  console.error(
+    "Error: MOCO_DOMAIN and MOCO_API_KEY environment variables are required.",
+  );
   process.exit(1);
 }
 
 if (MOCO_READ_ONLY) {
-  console.error("Warning: Server is running in READ-ONLY mode. Only GET requests will be available.");
+  console.error(
+    "Warning: Server is running in READ-ONLY mode. Only GET requests will be available.",
+  );
 }
 
 const MOCO_API_BASE_URL = `https://${MOCO_DOMAIN}.mocoapp.com/api/v1`;
@@ -33,9 +37,9 @@ const MOCO_API_BASE_URL = `https://${MOCO_DOMAIN}.mocoapp.com/api/v1`;
 const mocoClient = axios.create({
   baseURL: MOCO_API_BASE_URL,
   headers: {
-    "Authorization": `Token token=${MOCO_API_KEY}`,
+    Authorization: `Token token=${MOCO_API_KEY}`,
     "Content-Type": "application/json",
-    "Accept": "application/json",
+    Accept: "application/json",
   },
 });
 
@@ -49,19 +53,22 @@ const server = new Server(
     capabilities: {
       tools: {},
     },
-  }
+  },
 );
 
 // We will fetch and cache the OpenAPI spec and tools
 let openApiSpec: any = null;
-let mocoTools: Tool[] = [];
+const mocoTools: Tool[] = [];
 // Map tool names to their HTTP method and path
 const toolOperations = new Map<string, { method: string; path: string }>();
 
 // Helper to convert OpenAPI path to a valid tool name
 function generateToolName(method: string, apiPath: string): string {
   // e.g., GET /activities/{id} -> get_activities_by_id
-  const cleanPath = apiPath.replace(/^\//, '').replace(/\//g, '_').replace(/\{([^}]+)\}/g, 'by_$1');
+  const cleanPath = apiPath
+    .replace(/^\//, "")
+    .replace(/\//g, "_")
+    .replace(/\{([^}]+)\}/g, "by_$1");
   return `${method.toLowerCase()}_${cleanPath}`;
 }
 
@@ -79,14 +86,17 @@ function generateInputSchema(operation: any): any {
       // With SwaggerParser.dereference, refs are already resolved!
       const paramName = param.name;
       const paramSchema = param.schema || { type: "string" };
-      
+
       // Remove any leftover refs or incompatible keys just in case
       const { $ref, ...safeSchema } = paramSchema;
       schema.properties[paramName] = {
         ...safeSchema,
-        description: param.description || paramSchema.description || `Parameter ${paramName}`,
+        description:
+          param.description ||
+          paramSchema.description ||
+          `Parameter ${paramName}`,
       };
-      
+
       if (param.required) {
         schema.required.push(paramName);
       }
@@ -94,8 +104,8 @@ function generateInputSchema(operation: any): any {
   }
 
   // Add body parameters with full schema support
-  if (operation.requestBody && operation.requestBody.content && operation.requestBody.content['application/json']) {
-    const bodySchema = operation.requestBody.content['application/json'].schema;
+  if (operation.requestBody?.content?.["application/json"]) {
+    const bodySchema = operation.requestBody.content["application/json"].schema;
     const { $ref, ...safeBodySchema } = bodySchema;
     schema.properties.body = {
       ...safeBodySchema,
@@ -114,40 +124,48 @@ function loadOpenApiSpec() {
   try {
     console.error("Loading MOCO OpenAPI specification...");
     // The fully resolved (dereferenced) spec is bundled with the package
-    const specPath = path.join(__dirname, '../openapi/openapi.json');
-    const fileContent = fs.readFileSync(specPath, 'utf8');
+    const specPath = path.join(__dirname, "../openapi/openapi.json");
+    const fileContent = fs.readFileSync(specPath, "utf8");
     openApiSpec = JSON.parse(fileContent);
-    
+
     const paths = openApiSpec.paths || {};
-    
+
     for (const [apiPath, pathItem] of Object.entries(paths)) {
       // The bundled file has no $refs, so we can iterate directly
       for (const [method, operation] of Object.entries(pathItem as any)) {
         const lowerMethod = method.toLowerCase();
-        if (!['get', 'post', 'put', 'patch', 'delete'].includes(lowerMethod)) {
+        if (!["get", "post", "put", "patch", "delete"].includes(lowerMethod)) {
           continue;
         }
-        
+
         // Enforce read-only mode if enabled
-        if (MOCO_READ_ONLY && lowerMethod !== 'get') {
+        if (MOCO_READ_ONLY && lowerMethod !== "get") {
           continue;
         }
-        
+
         const toolName = generateToolName(method, apiPath);
-        const description = (operation as any).summary || (operation as any).description || `MOCO API: ${method.toUpperCase()} ${apiPath}`;
-        
+        const description =
+          (operation as any).summary ||
+          (operation as any).description ||
+          `MOCO API: ${method.toUpperCase()} ${apiPath}`;
+
         const inputSchema = generateInputSchema(operation);
-        
+
         mocoTools.push({
           name: toolName,
           description: description,
           inputSchema: inputSchema,
         });
-        
-        toolOperations.set(toolName, { method: method.toUpperCase(), path: apiPath });
+
+        toolOperations.set(toolName, {
+          method: method.toUpperCase(),
+          path: apiPath,
+        });
       }
     }
-    console.error(`Successfully generated ${mocoTools.length} MCP tools from MOCO OpenAPI spec.`);
+    console.error(
+      `Successfully generated ${mocoTools.length} MCP tools from MOCO OpenAPI spec.`,
+    );
   } catch (error) {
     console.error("Failed to load MOCO OpenAPI specification:", error);
     process.exit(1);
@@ -165,27 +183,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const toolName = request.params.name;
   const operation = toolOperations.get(toolName);
-  
+
   if (!operation) {
     throw new Error(`Tool not found: ${toolName}`);
   }
-  
+
   const args = request.params.arguments || {};
   let urlPath = operation.path;
   const queryParams: Record<string, any> = {};
-  let requestBody = args.body || undefined;
-  
+  const requestBody = args.body || undefined;
+
   // Replace path parameters and collect query parameters
   for (const [key, value] of Object.entries(args)) {
-    if (key === 'body') continue;
-    
+    if (key === "body") continue;
+
     if (urlPath.includes(`{${key}}`)) {
       urlPath = urlPath.replace(`{${key}}`, encodeURIComponent(String(value)));
     } else {
       queryParams[key] = value;
     }
   }
-  
+
   try {
     const response = await mocoClient.request({
       method: operation.method,
@@ -193,7 +211,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       params: queryParams,
       data: requestBody,
     });
-    
+
     return {
       content: [
         {
@@ -207,7 +225,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (error.response) {
       errorMessage = `MOCO API Error ${error.response.status}: ${JSON.stringify(error.response.data)}`;
     }
-    
+
     return {
       content: [
         {
