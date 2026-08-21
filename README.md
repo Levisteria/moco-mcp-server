@@ -21,7 +21,7 @@ Developed and maintained by **[Levisteria GbR](https://levisteria.com)** (Eddy L
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v24 or higher)
 - A MOCO Account (`<your-account>.mocoapp.com`)
 - A MOCO API Key (found in MOCO under Profile > Integrations)
 
