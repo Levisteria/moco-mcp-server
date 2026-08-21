@@ -9,6 +9,7 @@ RUN npm ci
 # Copy source code and build
 COPY tsconfig.json ./
 COPY src/ ./src/
+COPY openapi/ ./openapi/
 RUN npm run build
 
 # Production image
@@ -21,6 +22,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/build ./build
+COPY --from=builder /app/openapi ./openapi
 
 # Run the MCP server
 ENTRYPOINT ["node", "build/index.js"]

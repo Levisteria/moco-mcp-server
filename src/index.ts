@@ -9,6 +9,11 @@ import {
 import axios from "axios";
 import * as fs from "fs";
 import * as path from "path";
+import SwaggerParser from "@apidevtools/swagger-parser";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // MOCO API configuration
 const MOCO_DOMAIN = process.env.MOCO_DOMAIN;
@@ -72,13 +77,13 @@ function generateInputSchema(operation: any): any {
   // Add path and query parameters
   if (operation.parameters && Array.isArray(operation.parameters)) {
     operation.parameters.forEach((param: any) => {
-      // Basic support, resolving refs would require a full parser, but for simple params it works
+      // With SwaggerParser.dereference, refs are already resolved!
       const paramName = param.name;
       const paramSchema = param.schema || { type: "string" };
       
       schema.properties[paramName] = {
-        type: paramSchema.type || "string",
-        description: param.description || `Parameter ${paramName}`,
+        ...paramSchema,
+        description: param.description || paramSchema.description || `Parameter ${paramName}`,
       };
       
       if (param.required) {
@@ -87,13 +92,12 @@ function generateInputSchema(operation: any): any {
     });
   }
 
-  // Add body parameters (simplified)
+  // Add body parameters with full schema support
   if (operation.requestBody && operation.requestBody.content && operation.requestBody.content['application/json']) {
-    // For a real robust server, you'd want to use a library like @apidevtools/swagger-parser to resolve refs
-    // Here we just accept an object for the body
+    const bodySchema = operation.requestBody.content['application/json'].schema;
     schema.properties.body = {
-      type: "object",
-      description: "JSON request body",
+      ...bodySchema,
+      description: operation.requestBody.description || "JSON request body",
     };
     if (operation.requestBody.required) {
       schema.required.push("body");
@@ -106,9 +110,11 @@ function generateInputSchema(operation: any): any {
 // Fetch and parse the MOCO OpenAPI specification
 async function loadOpenApiSpec() {
   try {
-    console.error("Downloading MOCO OpenAPI specification...");
-    const response = await axios.get("https://docs.mocoapp.com/api/docs/v1/openapi.json");
-    openApiSpec = response.data;
+    console.error("Loading and resolving MOCO OpenAPI specification...");
+    // The bundled/raw spec is shipped with the package
+    const specPath = path.join(__dirname, '../../openapi/openapi_raw.json');
+    // dereference resolves all $refs internally, so we don't have to deal with them
+    openApiSpec = await SwaggerParser.dereference(specPath);
     
     // Generate tools
     for (const [apiPath, pathItem] of Object.entries(openApiSpec.paths)) {

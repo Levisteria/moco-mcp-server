@@ -5,7 +5,7 @@
 
 A Model Context Protocol (MCP) Server for the MOCO ERP Software.
 
-Instead of manually defining endpoints, this server dynamically fetches the **official MOCO OpenAPI specification** (`https://docs.mocoapp.com/api/docs/v1/openapi.json`) on startup and automatically generates all available MCP tools. This gives any MCP-compatible LLM (like Claude) instant access to all read and write operations (GET, POST, PUT, DELETE) of the MOCO API v1.
+Instead of manually defining endpoints, this server uses the **official MOCO OpenAPI specification** (bundled in the `openapi/` directory) and a full schema reference parser to automatically generate all available MCP tools. This gives any MCP-compatible LLM (like Claude) instant access to all read and write operations (GET, POST, PUT, DELETE) of the MOCO API v1, complete with precise tool descriptions and parameter schemas.
 
 Developed and maintained by [Levisteria GbR](https://levisteria.com) (Eddy Lackmann).
 
@@ -124,11 +124,12 @@ docker-compose up --build
 
 ## How it works
 
-1. The server starts and downloads `https://docs.mocoapp.com/api/docs/v1/openapi.json`.
-2. It parses all paths (e.g., `/activities`) and methods (e.g., `GET`, `POST`).
-3. It translates the parameters into JSON Schemas that MCP understands.
-4. The generated tools are named e.g., `get_activities` or `post_activities`.
-5. When the LLM calls a tool, the server forwards the authenticated request to MOCO and returns the JSON result.
+1. The server loads the bundled MOCO OpenAPI specification from the `openapi/` directory.
+2. It uses `@apidevtools/swagger-parser` to dereference all `$ref` links, ensuring complete and accurate JSON schemas.
+3. It parses all paths (e.g., `/activities`) and methods (e.g., `GET`, `POST`) and extracts their summaries and descriptions.
+4. It translates the parameters and request bodies into JSON Schemas that MCP understands.
+5. The generated tools are named e.g., `get_activities` or `post_activities`.
+6. When the LLM calls a tool, the server forwards the authenticated request to MOCO and returns the JSON result.
 
 ## License
 
