@@ -9,7 +9,6 @@ import {
 import axios from "axios";
 import * as fs from "fs";
 import * as path from "path";
-import SwaggerParser from "@apidevtools/swagger-parser";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -81,8 +80,10 @@ function generateInputSchema(operation: any): any {
       const paramName = param.name;
       const paramSchema = param.schema || { type: "string" };
       
+      // Remove any leftover refs or incompatible keys just in case
+      const { $ref, ...safeSchema } = paramSchema;
       schema.properties[paramName] = {
-        ...paramSchema,
+        ...safeSchema,
         description: param.description || paramSchema.description || `Parameter ${paramName}`,
       };
       
@@ -95,8 +96,9 @@ function generateInputSchema(operation: any): any {
   // Add body parameters with full schema support
   if (operation.requestBody && operation.requestBody.content && operation.requestBody.content['application/json']) {
     const bodySchema = operation.requestBody.content['application/json'].schema;
+    const { $ref, ...safeBodySchema } = bodySchema;
     schema.properties.body = {
-      ...bodySchema,
+      ...safeBodySchema,
       description: operation.requestBody.description || "JSON request body",
     };
     if (operation.requestBody.required) {
@@ -107,48 +109,20 @@ function generateInputSchema(operation: any): any {
   return schema;
 }
 
-// Fetch and parse the MOCO OpenAPI specification
-async function loadOpenApiSpec() {
+// Load the bundled MOCO OpenAPI specification
+function loadOpenApiSpec() {
   try {
-    console.error("Loading and resolving MOCO OpenAPI specification...");
-    // The bundled/raw spec is shipped with the package
-    // __dirname in build/ is /app/build or /home/ubuntu/moco-mcp-server/build
-    const specPath = path.join(__dirname, '../openapi/openapi_raw.json');
-    // Since the original openapi.json contains $refs to paths/ and components/ which we don't have,
-    // and network fetching might be blocked in some environments, we use parse instead of dereference
-    // for the local execution, or we rely on a pre-bundled file.
-    // In a real environment with network access, we'd use dereference on the live URL.
-    try {
-      openApiSpec = await SwaggerParser.dereference("https://docs.mocoapp.com/api/docs/v1/openapi.json");
-    } catch (e: any) {
-      console.error("Network dereference failed. Using local fallback.", e.message);
-      // In case of network failure (e.g., restricted environments), use the bundled raw spec
-      // and a lightweight parser that skips deep refs but still provides the endpoints
-      openApiSpec = await SwaggerParser.parse(specPath);
-    }
+    console.error("Loading MOCO OpenAPI specification...");
+    // The fully resolved (dereferenced) spec is bundled with the package
+    const specPath = path.join(__dirname, '../openapi/openapi.json');
+    const fileContent = fs.readFileSync(specPath, 'utf8');
+    openApiSpec = JSON.parse(fileContent);
     
-    // Generate tools
-    let paths = openApiSpec.paths || {};
+    const paths = openApiSpec.paths || {};
     
     for (const [apiPath, pathItem] of Object.entries(paths)) {
-      let actualPathItem = pathItem as any;
-      
-      // Basic fallback for local unresolved path refs
-      if (actualPathItem.$ref && actualPathItem.$ref.startsWith('./paths/')) {
-        try {
-          const localPathFile = path.join(__dirname, '../../openapi', actualPathItem.$ref.replace('./', ''));
-          const fileContent = fs.readFileSync(localPathFile, 'utf8');
-          const parsed = JSON.parse(fileContent);
-          const pathKey = Object.keys(parsed)[0];
-          actualPathItem = parsed[pathKey];
-        } catch (err) {
-          continue;
-        }
-      } else if (actualPathItem.$ref) {
-        continue;
-      }
-      
-      for (const [method, operation] of Object.entries(actualPathItem)) {
+      // The bundled file has no $refs, so we can iterate directly
+      for (const [method, operation] of Object.entries(pathItem as any)) {
         const lowerMethod = method.toLowerCase();
         if (!['get', 'post', 'put', 'patch', 'delete'].includes(lowerMethod)) {
           continue;
@@ -248,7 +222,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // Start the server
 async function run() {
-  await loadOpenApiSpec();
+  loadOpenApiSpec();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("MOCO MCP Server is running and listening on stdio.");

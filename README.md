@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://www.mocoapp.com/assets/logo/moco-logo-2c069502621c54f5c093a5214041b312.svg" alt="MOCO Logo" width="120" height="120" />
+  <img src="https://www.mocoapp.com/assets/moco-logo@2x-c50c469a52b74e96144dc383c3ea2261e6edae905a6b885a0eedafeaf1e861dc.png" alt="MOCO Logo" width="120" height="120" />
   <h1>MOCO MCP Server</h1>
   <p><em>A Model Context Protocol (MCP) Server for the MOCO ERP Software</em></p>
 
