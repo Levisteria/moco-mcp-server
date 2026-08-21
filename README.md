@@ -3,7 +3,7 @@
   <h1>MOCO MCP Server</h1>
   <p><em>A Model Context Protocol (MCP) Server for the MOCO ERP Software</em></p>
 
-  [![npm version](https://img.shields.io/npm/v/@levisteria/moco-mcp-server.svg)](https://www.npmjs.com/package/@levisteria/moco-mcp-server)
+  [![npm version](https://img.shields.io/npm/v/@levisteria-solutions/moco-mcp-server.svg)](https://www.npmjs.com/package/@levisteria-solutions/moco-mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
@@ -32,7 +32,7 @@ You can run the server directly without installing it globally:
 ```bash
 export MOCO_DOMAIN="your-account-name"
 export MOCO_API_KEY="your-api-key"
-npx -y @levisteria/moco-mcp-server
+npx -y @levisteria-solutions/moco-mcp-server
 ```
 
 ## Configuration in Claude Desktop / Cursor
@@ -46,7 +46,7 @@ Add the server to your MCP configuration (e.g., in Claude Desktop or Cursor).
   "mcpServers": {
     "moco": {
       "command": "npx",
-      "args": ["-y", "@levisteria/moco-mcp-server"],
+      "args": ["-y", "@levisteria-solutions/moco-mcp-server"],
       "env": {
         "MOCO_DOMAIN": "your-account-name",
         "MOCO_API_KEY": "your-api-key",

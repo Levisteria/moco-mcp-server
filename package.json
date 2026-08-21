@@ -1,6 +1,6 @@
 {
-  "name": "@levisteria/moco-mcp-server",
-  "version": "1.0.3",
+  "name": "@levisteria-solutions/moco-mcp-server",
+  "version": "1.0.4",
   "main": "build/index.js",
   "bin": {
     "moco-mcp-server": "./build/index.js"
