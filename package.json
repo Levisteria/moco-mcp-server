@@ -1,0 +1,36 @@
+{
+  "name": "@levisteria/moco-mcp-server",
+  "version": "1.0.0",
+  "main": "build/index.js",
+  "bin": {
+    "moco-mcp-server": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [],
+  "author": "Eddy Lackmann <a.eddy@hotmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/levisteria/moco-mcp-server.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "axios": "^1.19.0",
+    "json-schema-to-ts": "^3.1.1",
+    "openapi-types": "^12.1.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
+  },
+  "type": "module"
+}
