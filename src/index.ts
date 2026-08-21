@@ -121,18 +121,34 @@ async function loadOpenApiSpec() {
     try {
       openApiSpec = await SwaggerParser.dereference("https://docs.mocoapp.com/api/docs/v1/openapi.json");
     } catch (e: any) {
-      console.error("Network dereference failed, falling back to local parse (schemas might be incomplete)", e.message);
+      console.error("Network dereference failed. Using local fallback.", e.message);
+      // In case of network failure (e.g., restricted environments), use the bundled raw spec
+      // and a lightweight parser that skips deep refs but still provides the endpoints
       openApiSpec = await SwaggerParser.parse(specPath);
     }
     
     // Generate tools
-    // Note: If local parse was used, paths might be $refs. For a full robust server,
-    // we would download all path files. For this test, we handle direct paths.
-    for (const [apiPath, pathItem] of Object.entries(openApiSpec.paths || {})) {
-      if ((pathItem as any).$ref) {
-        continue; // Skip unresolved refs in local fallback mode
+    let paths = openApiSpec.paths || {};
+    
+    for (const [apiPath, pathItem] of Object.entries(paths)) {
+      let actualPathItem = pathItem as any;
+      
+      // Basic fallback for local unresolved path refs
+      if (actualPathItem.$ref && actualPathItem.$ref.startsWith('./paths/')) {
+        try {
+          const localPathFile = path.join(__dirname, '../../openapi', actualPathItem.$ref.replace('./', ''));
+          const fileContent = fs.readFileSync(localPathFile, 'utf8');
+          const parsed = JSON.parse(fileContent);
+          const pathKey = Object.keys(parsed)[0];
+          actualPathItem = parsed[pathKey];
+        } catch (err) {
+          continue;
+        }
+      } else if (actualPathItem.$ref) {
+        continue;
       }
-      for (const [method, operation] of Object.entries(pathItem as any)) {
+      
+      for (const [method, operation] of Object.entries(actualPathItem)) {
         const lowerMethod = method.toLowerCase();
         if (!['get', 'post', 'put', 'patch', 'delete'].includes(lowerMethod)) {
           continue;
