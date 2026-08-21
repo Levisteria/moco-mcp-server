@@ -1,6 +1,6 @@
 {
   "name": "@levisteria/moco-mcp-server",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "build/index.js",
   "bin": {
     "moco-mcp-server": "./build/index.js"
@@ -20,7 +20,13 @@
     "access": "public"
   },
   "license": "ISC",
-  "description": "",
+  "description": "Model Context Protocol (MCP) Server for the MOCO ERP Software using dynamic OpenAPI generation.",
+  "files": [
+    "build",
+    "openapi",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
     "@modelcontextprotocol/sdk": "^1.30.0",

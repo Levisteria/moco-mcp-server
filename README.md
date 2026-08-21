@@ -1,13 +1,16 @@
-# MOCO MCP Server
+<div align="center">
+  <img src="https://www.mocoapp.com/assets/logo/moco-logo-2c069502621c54f5c093a5214041b312.svg" alt="MOCO Logo" width="120" height="120" />
+  <h1>MOCO MCP Server</h1>
+  <p><em>A Model Context Protocol (MCP) Server for the MOCO ERP Software</em></p>
 
-[![npm version](https://img.shields.io/npm/v/@levisteria/moco-mcp-server.svg)](https://www.npmjs.com/package/@levisteria/moco-mcp-server)
+  [![npm version](https://img.shields.io/npm/v/@levisteria/moco-mcp-server.svg)](https://www.npmjs.com/package/@levisteria/moco-mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Model Context Protocol (MCP) Server for the MOCO ERP Software.
+</div>
 
 Instead of manually defining endpoints, this server uses the **official MOCO OpenAPI specification** (bundled in the `openapi/` directory) and a full schema reference parser to automatically generate all available MCP tools. This gives any MCP-compatible LLM (like Claude) instant access to all read and write operations (GET, POST, PUT, DELETE) of the MOCO API v1, complete with precise tool descriptions and parameter schemas.
 
-Developed and maintained by [Levisteria GbR](https://levisteria.com) (Eddy Lackmann).
+Developed and maintained by **[Levisteria GbR](https://levisteria.com)** (Eddy Lackmann).
 
 ## Features
 
