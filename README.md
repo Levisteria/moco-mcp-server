@@ -16,7 +16,7 @@ Developed and maintained by **[Levisteria GbR](https://levisteria.com)** (Eddy L
 
 - **Full API Coverage:** Automatically generates tools for Time Tracking, Projects, Invoices, Contacts, and all other MOCO endpoints.
 - **Safety Mode:** Can be restricted to `READ_ONLY` via environment variables to prevent accidental data modifications by the LLM.
-- **Always Up-to-Date:** Fetches the latest API specification from MOCO on every server start.
+- **Pre-Bundled Spec:** Ships with a fully dereferenced copy of the MOCO OpenAPI specification (`openapi/openapi.json`), so the server starts instantly without any network calls to fetch it. Run `npm run update-spec` to refresh it from a new source when MOCO updates their API.
 - **Easy Execution:** Run directly via `npx`.
 
 ## Prerequisites
@@ -95,12 +95,23 @@ npm start
 
 ## How it works
 
-1. The server loads the bundled MOCO OpenAPI specification from the `openapi/` directory.
-2. It uses `@apidevtools/swagger-parser` to dereference all `$ref` links, ensuring complete and accurate JSON schemas.
-3. It parses all paths (e.g., `/activities`) and methods (e.g., `GET`, `POST`) and extracts their summaries and descriptions.
-4. It translates the parameters and request bodies into JSON Schemas that MCP understands.
-5. The generated tools are named e.g., `get_activities` or `post_activities`.
-6. When the LLM calls a tool, the server forwards the authenticated request to MOCO and returns the JSON result.
+1. The server loads the pre-bundled, fully dereferenced MOCO OpenAPI specification from `openapi/openapi.json` at startup (no network call involved).
+2. It parses all paths (e.g., `/activities`) and methods (e.g., `GET`, `POST`) and extracts their summaries and descriptions.
+3. It translates the parameters and request bodies into JSON Schemas that MCP understands.
+4. The generated tools are named e.g., `get_activities` or `post_activities`.
+5. When the LLM calls a tool, the server forwards the authenticated request to MOCO and returns the JSON result.
+
+## Updating the OpenAPI Spec
+
+`openapi/openapi.json` is checked into the repository so the server never needs network access at startup. To refresh it after MOCO updates their API, run:
+
+```bash
+npm run update-spec -- <url-or-path-to-moco-openapi-spec>
+# or
+MOCO_OPENAPI_SOURCE=<url-or-path-to-moco-openapi-spec> npm run update-spec
+```
+
+This downloads (or reads) the given spec, fully dereferences all `$ref` links via `@apidevtools/swagger-parser`, and overwrites `openapi/openapi.json`. Commit the resulting file once you've verified the server still starts correctly.
 
 ## License
 
