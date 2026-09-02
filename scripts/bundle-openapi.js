@@ -7,17 +7,9 @@ import SwaggerParser from "@apidevtools/swagger-parser";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function printUsage() {
-  console.error(
-    [
-      "Usage: node scripts/bundle-openapi.js <source>",
-      "   or: MOCO_OPENAPI_SOURCE=<source> node scripts/bundle-openapi.js",
-      "",
-      "<source> can be a URL to the MOCO OpenAPI spec or a local file path.",
-      "The spec is fully dereferenced (all $ref resolved) and written to openapi/openapi.json.",
-    ].join("\n"),
-  );
-}
+// MOCO's officially published OpenAPI spec. Override via CLI arg or
+// MOCO_OPENAPI_SOURCE when a newer/alternate source should be used instead.
+const DEFAULT_OPENAPI_SOURCE = "https://docs.mocoapp.com/api/docs/v1.yaml";
 
 async function bundleSpec(source) {
   console.log(`Fetching and dereferencing MOCO OpenAPI spec from: ${source}`);
@@ -37,12 +29,8 @@ async function bundleSpec(source) {
   console.log(`Successfully wrote dereferenced OpenAPI spec to ${outputPath}`);
 }
 
-const source = process.argv[2] || process.env.MOCO_OPENAPI_SOURCE;
-
-if (!source) {
-  printUsage();
-  process.exit(1);
-}
+const source =
+  process.argv[2] || process.env.MOCO_OPENAPI_SOURCE || DEFAULT_OPENAPI_SOURCE;
 
 bundleSpec(source).catch((err) => {
   console.error("Error bundling OpenAPI spec:", err);

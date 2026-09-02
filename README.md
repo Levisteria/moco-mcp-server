@@ -106,6 +106,12 @@ npm start
 `openapi/openapi.json` is checked into the repository so the server never needs network access at startup. To refresh it after MOCO updates their API, run:
 
 ```bash
+npm run update-spec
+```
+
+By default this downloads MOCO's officially published spec from `https://docs.mocoapp.com/api/docs/v1.yaml`. To use a different source (a newer URL, or a local file), override it:
+
+```bash
 npm run update-spec -- <url-or-path-to-moco-openapi-spec>
 # or
 MOCO_OPENAPI_SOURCE=<url-or-path-to-moco-openapi-spec> npm run update-spec
